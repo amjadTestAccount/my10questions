@@ -1,57 +1,80 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>AI Image Generator</title>
-<style>
-   body {
-     font-family: Arial, sans-serif;
-     text-align: center;
-     padding: 2rem;
-     background-color: #f4f4f4;
-   }
-   input[type="text"] {
-     width: 60%;
-     padding: 0.5rem;
-     font-size: 1rem;
-   }
-   button {
-     padding: 0.5rem 1rem;
-     font-size: 1rem;
-     margin-left: 1rem;
-   }
-   img {
-     margin-top: 2rem;
-     max-width: 80%;
-     height: auto;
-     border: 1px solid #ccc;
-     box-shadow: 0 0 10px rgba(0,0,0,0.1);
-   }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple AI Image Generator</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 20px; }
+        #image-container { margin-top: 20px; min-height: 400px; display: flex; justify-content: center; align-items: center; border: 1px dashed #ccc; }
+        #image-display { max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .controls { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        input[type="text"] { width: 400px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        button { padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+    </style>
 </head>
 <body>
-<h1>AI Image Generator</h1>
-<input type="text" id="prompt" placeholder="Enter your image prompt here..." />
-<button onclick="generateImage()">Generate</button>
-<img id="result" src="" alt="Generated image will appear here" />
-<script>
-   function generateImage() {
-     const prompt = document.getElementById("prompt").value;
-     document.getElementById("result").src = ""; // Clear previous image
-     fetch("https://one0-questions-backend-1.onrender.com/generate?prompt=" + encodeURIComponent(prompt))
-       .then(res => res.json())
-       .then(data => {
-         if (data.image_url) {
-           document.getElementById("result").src = "https://your-backend.onrender.com" + data.image_url;
-         } else {
-           alert("Error generating image: " + (data.error || "Unknown error"));
-         }
-       })
-       .catch(err => {
-         alert("Request failed: " + err.message);
-       });
-   }
-</script>
+
+    <h1>✨ Simple AI Art Tool ✨</h1>
+    
+    <div class="controls">
+        <input type="text" id="prompt-input" placeholder="Enter your prompt (e.g., A robot cat fishing in space)..." required>
+        <button onclick="generateImage()">Generate Image</button>
+    </div>
+
+    <div id="image-container">
+        <p id="status-message">Your generated image will appear here.</p>
+        <img id="image-display" src="" alt="Generated AI Image" style="display: none;">
+    </div>
+
+    <script>
+        async function generateImage() {
+            const prompt = document.getElementById('prompt-input').value.trim();
+            const statusMessage = document.getElementById('status-message');
+            const imageDisplay = document.getElementById('image-display');
+            const imageContainer = document.getElementById('image-container');
+
+            if (!prompt) {
+                alert("Please enter a prompt!");
+                return;
+            }
+
+            // 1. Show loading state
+            statusMessage.textContent = "🎨 Generating image... Please wait (10-30 seconds).";
+            imageDisplay.style.display = 'none';
+
+            try {
+                // 2. Send the prompt to your Node.js backend
+                const response = await fetch('http://localhost:3000/generate-image', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ prompt: prompt }),
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // 3. Success: Display the image
+                    imageDisplay.src = data.imageUrl;
+                    imageDisplay.alt = prompt; // Set alt text for accessibility
+                    imageDisplay.onload = () => {
+                        statusMessage.textContent = ""; // Clear status when image is loaded
+                        imageDisplay.style.display = 'block';
+                    };
+                } else {
+                    // 4. Handle API error
+                    statusMessage.textContent = `Error: ${data.error || 'Could not generate image.'}`;
+                }
+
+            } catch (error) {
+                // 5. Handle network or server error
+                console.error('Fetch Error:', error);
+                statusMessage.textContent = "Error connecting to the server. Check the console and make sure your server is running.";
+            }
+        }
+    </script>
 </body>
 </html>
