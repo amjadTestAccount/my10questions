@@ -39,7 +39,7 @@
    function generateImage() {
      const prompt = document.getElementById("prompt").value;
      document.getElementById("result").src = ""; // Clear previous image
-     fetch("https://your-backend.onrender.com/generate?prompt=" + encodeURIComponent(prompt))
+     fetch("https://one0-questions-backend-1.onrender.com/generate?prompt=" + encodeURIComponent(prompt))
        .then(res => res.json())
        .then(data => {
          if (data.image_url) {
